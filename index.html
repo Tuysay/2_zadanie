@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -19,7 +17,7 @@ initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 
     <div class="board">
         <add-task @add-task="addTask"></add-task>
-        <column v-for="(column, index) in columns" :key="index" :column="column" @save="saveData"></column>
+        <column v-for="(column, index) in columns" :key="index" :column="column" @save="saveData" ></column>
     </div>
 </div>
 

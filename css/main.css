@@ -109,3 +109,11 @@ button:hover {
 
     background-color: #8B0000;
 }
+
+.name_task {
+    white-space: pre-line;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    width: 100%;
+    max-width: 200px; /* Ограничиваем ширину поля */
+}
