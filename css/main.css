@@ -71,3 +71,41 @@ header {
     margin-top: 5px;
     margin-bottom: 5px;
 }
+.task-container {
+
+    word-wrap: break-word;
+}
+.completed {
+    text-decoration: line-through;
+}
+
+button {
+    padding: 5px 10px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #66CDAA;
+    color: white;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.delete-btn {
+    background-color: #B22222;
+}
+
+.delete-btn:hover {
+    background-color: #8B0000;
+}
+
+.delete-btn_one{
+    background-color: #B22222;
+    margin-top: 5px;
+}
+.delete-btn_one:hover {
+
+    background-color: #8B0000;
+}
