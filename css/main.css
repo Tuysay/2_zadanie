@@ -1,113 +1,78 @@
 body {
     font-family: tahoma, serif;
-    color:#282828;
-
+    color: #282828;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
 }
 
-.nav-bar {
-    background: linear-gradient(-90deg, #84CF6A, #16C0B0);
-    height: 60px;
-    margin-bottom: 15px;
-}
-
-.product {
-    display: flex;
-    flex-flow: wrap;
-    padding: 1rem;
-}
-
-header {
-    display: flex;
-    align-items: center;
-}
-.logo {
-    margin-right: 10px;
-}
-.product-image img {
-    width: 50px;
-    height: auto;
-}
 .board {
     display: flex;
     justify-content: space-around;
+    margin-top: 20px;
 }
+
 .column {
     width: 30%;
     border: 1px solid #ccc;
     padding: 10px;
     margin: 10px;
+    border-radius: 5px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.column h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
 .card {
     border: 1px solid #eee;
     background-color: #f9f9f9;
-    padding: 5px;
-    margin-bottom: 5px;
-}
-.card:last-child {
-    margin-bottom: 0;
-}
-.board {
-    display: flex;
-    justify-content: space-around;
-}
-.column {
-    width: 30%;
-    border: 1px solid #ccc;
     padding: 10px;
-    margin: 10px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.card {
-    border: 1px solid #eee;
-    background-color: #f9f9f9;
-    padding: 5px;
-    margin-bottom: 5px;
-}
+
 .card:last-child {
     margin-bottom: 0;
 }
+
 .task {
     border: 1px solid #ccc;
     padding: 5px;
     margin-top: 5px;
     margin-bottom: 5px;
+    background-color: #f9f9f9;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-.task-container {
 
-    word-wrap: break-word;
-}
 .completed {
     text-decoration: line-through;
 }
 
 button {
-    padding: 5px 10px;
+    padding: 5px 14px;
     margin-left: 5px;
+    margin-bottom: 5px;
     border: none;
     border-radius: 3px;
     cursor: pointer;
     background-color: #66CDAA;
     color: white;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
     background-color: #45a049;
 }
 
-.delete-btn {
-    background-color: #B22222;
-}
-
-.delete-btn:hover {
-    background-color: #8B0000;
-}
-
-.delete-btn_one{
-    background-color: #B22222;
-    margin-top: 5px;
-}
-.delete-btn_one:hover {
-
-    background-color: #8B0000;
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 .name_task {
@@ -115,10 +80,11 @@ button:hover {
     word-break: break-all;
     overflow-wrap: break-word;
     width: 100%;
-    max-width: 200px; /* Ограничиваем ширину поля */
+    max-width: 200px;
 }
 
-.column.inactive {
-    pointer-events: none; /* Запрет на взаимодействие с элементами в колонке */
-    opacity: 0.5; /* Понижаем прозрачность для визуального отображения неактивности */
+.timestamp {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
 }
