@@ -10,7 +10,7 @@ Vue.component('add-task', {
                 <button @click="delSubtask(index)">-</button>
             </div>
             <button @click="addSubtask" :disabled="task.subtasks.length >= maxSubtasks">+</button>
-            <button @click="addTask">Добавить</button>
+            <button @click="addTask" :disabled="disableAddButton">Добавить</button>
         </div>
     </div>
     `,
@@ -21,13 +21,24 @@ Vue.component('add-task', {
                 subtasks: []
             },
             minSubtasks: 3,
-            maxSubtasks: 5
+            maxSubtasks: 5,
+            maxTasks: [5, 3]
+        }
+    },
+    computed: {
+        disableAddButton() {
+            const columnIndex = this.$parent.columns.findIndex(column => column.name === 'Новые задачи');
+            const maxSubtasks = this.maxTasks[columnIndex];
+            return this.task.subtasks.length < this.minSubtasks || this.task.subtasks.length > maxSubtasks;
         }
     },
     methods: {
         addSubtask() {
-            if (this.task.subtasks.length < 5){
-                this.task.subtasks.push({title: "Task " + (this.task.subtasks.length + 1), done: false})
+            const maxSubtasks = this.maxSubtasks;
+            if (this.task.subtasks.length < maxSubtasks) {
+                this.task.subtasks.push({ name: "", done: false });
+            } else {
+                alert("Максимальное количество подзадач для этой задачи: " + maxSubtasks);
             }
         },
         delSubtask(index) {
@@ -38,6 +49,15 @@ Vue.component('add-task', {
                 alert('Необходимо заполнить заголовок задачи.');
                 return;
             }
+
+            const columnIndex = this.$parent.columns.findIndex(column => column.name === 'Новые задачи');
+            const maxSubtasks = this.maxTasks[columnIndex];
+
+            if (this.task.subtasks.length < this.minSubtasks || this.task.subtasks.length > maxSubtasks) {
+                alert('Задача должна содержать от ' + this.minSubtasks + ' до ' + maxSubtasks + ' подзадач.');
+                return;
+            }
+
             if (this.task.subtasks.length === 0 || !this.task.subtasks.every(subtask => subtask.name)) {
                 alert('Все задачи должны иметь хотя бы одну подзадачу и название.');
                 return;
@@ -45,16 +65,17 @@ Vue.component('add-task', {
 
             let newTask = {
                 name: this.task.name,
-                subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false }))
+                subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false })),
+                created_at: new Date().toLocaleString()
             };
             this.$emit('add-task', newTask);
 
             this.task.name = 'Новая задача';
             this.task.subtasks = [];
         }
-    },
-
+    }
 });
+
 Vue.component('column', {
     props: ['column'],
     template: `
@@ -71,15 +92,18 @@ Vue.component('column', {
             let subtaskIndex = task.subtasks.indexOf(subtask);
             this.column.tasks[taskIndex].subtasks[subtaskIndex].done = subtask.done;
 
-            let halfCheckedSubtasks = this.column.tasks[taskIndex].subtasks.filter(subtask => subtask.done).length >= this.column.tasks[taskIndex].subtasks.length / 2;
-            if (halfCheckedSubtasks) {
-                this.column.tasks = this.column.tasks.filter(t => t !== task);
-                this.$emit('move-task', task, 1);
-            }
-
-            if (this.column.tasks[taskIndex].subtasks.every(subtask => subtask.done)) {
-                this.column.tasks = this.column.tasks.filter(t => t !== task);
-                this.$emit('move-task', task, 2);
+            if (this.column.name === 'В процессе') {
+                if (this.column.tasks[taskIndex].subtasks.every(subtask => subtask.done)) {
+                    this.column.tasks = this.column.tasks.filter(t => t !== task);
+                    this.$emit('move-task', task, 2);
+                }
+            } else {
+                let halfCheckedSubtasks = this.column.tasks[taskIndex].subtasks.filter(subtask => subtask.done).length >= this.column.tasks[taskIndex].subtasks.length / 2;
+                if (halfCheckedSubtasks) {
+                    let columnIndex = this.$parent.columns.findIndex(column => column.name === 'В процессе');
+                    this.column.tasks = this.column.tasks.filter(t => t !== task);
+                    this.$emit('move-task', task, 1);
+                }
             }
         }
     }
@@ -90,10 +114,11 @@ Vue.component('task', {
     template: `
     <div>
     <h2>{{ task.name }}</h2>
+    <p v-if="task.completedAt">Завершено: {{ task.completedAt }}</p>
     <div v-for="(subtask, index) in task.subtasks" class="subtask" :key="index" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
       <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{ subtask.name }}
     </div>
-  </div>
+</div>
     `,
     methods: {
         toggleSubtask(subtask) {
@@ -138,19 +163,15 @@ let app = new Vue({
         saveData() {
             localStorage.setItem('columns', JSON.stringify(this.columns))
         },
+
         addTask(task) {
-            if (!task.subtasks.every(subtask => subtask.name)) {
-                alert("Все задачи должны иметь хотя бы одну подзадачу.");
-                return;
-            }
-            if (this.columns[0].tasks.length < 3) {
-                this.columns[0].tasks.push(task);
-                this.saveData();
-            } else {
-                alert("Вы достигли максимального количества задач в этом столбце!");
-            }
+            this.columns[0].tasks.push(task);
+            this.saveData();
         },
         moveTask(task, columnIndex) {
+            const currentDate = new Date().toLocaleString();
+            task.completedAt = currentDate;
+
             this.columns[columnIndex - 1].tasks = this.columns[columnIndex - 1].tasks.filter(t => t !== task);
             this.columns[columnIndex].tasks.push(task);
             this.saveData();
