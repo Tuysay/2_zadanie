@@ -172,8 +172,7 @@ let app = new Vue({
             this.saveData();
         },
         moveTask(task, columnIndex) {
-            const currentDate = new Date().toLocaleString();
-            task.completedAt = currentDate;
+            task.completedAt = new Date().toLocaleString();
 
             this.columns[columnIndex - 1].tasks = this.columns[columnIndex - 1].tasks.filter(t => t !== task);
             this.columns[columnIndex].tasks.push(task);
