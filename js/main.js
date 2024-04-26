@@ -22,60 +22,63 @@ Vue.component('add-task', {
             },
             minSubtasks: 3,
             maxSubtasks: 5,
-            maxTasks: [5, 3]
+            maxTasks: [3, 5]
         }
     },
     computed: {
         disableAddButton() {
             const columnIndex = this.$parent.columns.findIndex(column => column.name === 'Новые задачи');
-            const maxSubtasks = this.maxTasks[columnIndex];
-            return this.task.subtasks.length < this.minSubtasks || this.task.subtasks.length > maxSubtasks;
+            const maxTasks = this.$parent.columns[columnIndex].tasks.length >= this.maxTasks[columnIndex];
+            const maxInProgressTasks = this.$parent.columns[1].tasks.length >= this.maxTasks[1];
+            return maxTasks || maxInProgressTasks;
         }
     },
     methods: {
         addSubtask() {
-            const maxSubtasks = this.maxSubtasks;
+            const columnIndex = this.$parent.columns.findIndex(column => column.name === 'Новые задачи');
+            const maxSubtasks = columnIndex === 1 ? 3 : 5;
+
             if (this.task.subtasks.length < maxSubtasks) {
                 this.task.subtasks.push({ name: "", done: false });
             } else {
-                alert("Максимальное количество подзадач для этой задачи: " + maxSubtasks);
+                alert("Максимальное количество подзадач для этого столбца: " + maxSubtasks);
             }
         },
         delSubtask(index) {
             this.task.subtasks.splice(index, 1);
         },
         addTask() {
-            if (!this.task.name) {
-                alert('Необходимо заполнить заголовок задачи.');
-                return;
-            }
-
             const columnIndex = this.$parent.columns.findIndex(column => column.name === 'Новые задачи');
-            const maxSubtasks = this.maxTasks[columnIndex];
+            if (this.$parent.columns[columnIndex].tasks.length < this.maxTasks[columnIndex]) {
+                if (!this.task.name) {
+                    alert('Необходимо заполнить заголовок задачи.');
+                    return;
+                }
 
-            if (this.task.subtasks.length < this.minSubtasks || this.task.subtasks.length > maxSubtasks) {
-                alert('Задача должна содержать от ' + this.minSubtasks + ' до ' + maxSubtasks + ' подзадач.');
-                return;
+                if (this.task.subtasks.length < 3 || this.task.subtasks.length > 5) {
+                    alert('Задача должна содержать от 3 до 5 подзадач.');
+                    return;
+                }
+
+                if (this.task.subtasks.length === 0 || !this.task.subtasks.every(subtask => subtask.name)) {
+                    alert('Все задачи должны иметь хотя бы одну подзадачу и название.');
+                    return;
+                }
+
+                let newTask = {
+                    name: this.task.name,
+                    subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false }))
+                };
+                this.$emit('add-task', newTask);
+
+                this.task.name = 'Новая задача';
+                this.task.subtasks = [];
+            } else {
+                alert("Вы достигли максимального количества задач в этом столбце!");
             }
-
-            if (this.task.subtasks.length === 0 || !this.task.subtasks.every(subtask => subtask.name)) {
-                alert('Все задачи должны иметь хотя бы одну подзадачу и название.');
-                return;
-            }
-
-            let newTask = {
-                name: this.task.name,
-                subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false })),
-                created_at: new Date().toLocaleString()
-            };
-            this.$emit('add-task', newTask);
-
-            this.task.name = 'Новая задача';
-            this.task.subtasks = [];
         }
     }
 });
-
 Vue.component('column', {
     props: ['column'],
     template: `
