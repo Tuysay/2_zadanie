@@ -6,7 +6,7 @@ Vue.component('add-task', {
             <label>Название задачи <input maxlength="35" minlength="3" v-model="task.name"></label>
             <h3>Подзадачи</h3>
             <div v-for="(subtask, index) in task.subtasks" :key="index">
-                <input maxlength="50" minlength="3" v-model="subtask.name">
+                <input placeholder="Напиши подзадачу" maxlength="50" minlength="3" v-model="subtask.name">
                 <button @click="delSubtask(index)">-</button>
             </div>
             <button @click="addSubtask" :disabled="task.subtasks.length >= maxSubtasks">+</button>
@@ -20,15 +20,14 @@ Vue.component('add-task', {
                 name: 'Новая задача',
                 subtasks: []
             },
+            minSubtasks: 3,
             maxSubtasks: 5
         }
     },
     methods: {
         addSubtask() {
-            if (this.task.subtasks.length < this.maxSubtasks) {
-                this.task.subtasks.push({ name: "Пункт " + (this.task.subtasks.length + 1), done: false });
-            } else {
-                alert("Вы достигли максимального количества подзадач в этом столбце!");
+            if (this.task.subtasks.length < 5){
+                this.task.subtasks.push({title: "Task " + (this.task.subtasks.length + 1), done: false})
             }
         },
         delSubtask(index) {
@@ -62,13 +61,26 @@ Vue.component('column', {
     <div class="column">
         <h2>{{ column.name }}</h2>
         <div class="task">
-            <task v-for="(task, index) in column.tasks" :key="index" :task="task" @done-subtask="doneSubtask"></task>
+            <task v-for="(task, index) in column.tasks" :key="index" :task="task" @done-subtask="doneSubtask(task, $event)"></task>
         </div>
     </div>
     `,
     methods: {
-        doneSubtask(subtask) {
-            this.$emit('done-subtask', subtask)
+        doneSubtask(task, subtask) {
+            let taskIndex = this.column.tasks.indexOf(task);
+            let subtaskIndex = task.subtasks.indexOf(subtask);
+            this.column.tasks[taskIndex].subtasks[subtaskIndex].done = subtask.done;
+
+            let halfCheckedSubtasks = this.column.tasks[taskIndex].subtasks.filter(subtask => subtask.done).length >= this.column.tasks[taskIndex].subtasks.length / 2;
+            if (halfCheckedSubtasks) {
+                this.column.tasks = this.column.tasks.filter(t => t !== task);
+                this.$emit('move-task', task, 1);
+            }
+
+            if (this.column.tasks[taskIndex].subtasks.every(subtask => subtask.done)) {
+                this.column.tasks = this.column.tasks.filter(t => t !== task);
+                this.$emit('move-task', task, 2);
+            }
         }
     }
 });
@@ -77,25 +89,16 @@ Vue.component('task', {
     props: ['task'],
     template: `
     <div>
-        <h2>{{task.name}}</h2>
-        <div v-for="(subtask, index) in task.subtasks" class="subtask" :key="index" :class="{done:subtask.done}" @click="toggleSubtask(subtask)">
-            <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{subtask.name}}
-        </div>
+    <h2>{{ task.name }}</h2>
+    <div v-for="(subtask, index) in task.subtasks" class="subtask" :key="index" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
+      <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{ subtask.name }}
     </div>
+  </div>
     `,
     methods: {
-        doneSubtask(subtask) {
+        toggleSubtask(subtask) {
+            subtask.done = !subtask.done;
             this.$emit('done-subtask', subtask);
-        },
-        deleteAllTasks() {
-            this.column.tasks = [];
-            // Добавим также сохранение данных после удаления
-            this.$emit('save');
-        }
-    },
-    computed: {
-        isFirstColumn() {
-            return this.column.index === 0;
         }
     }
 });
@@ -106,18 +109,7 @@ let app = new Vue({
         columns: [
             {
                 name: "Новые задачи",
-                tasks: [
-                    {
-                        name: "Задача 1",
-                        subtasks: [
-                            { name: "Пункт 1.1", done: true },
-                            { name: "Пункт 1.2", done: false },
-                            { name: "Пункт 1.3", done: false },
-                            { name: "Пункт 1.4", done: false },
-                            { name: "Пункт 1.5", done: false },
-                        ]
-                    },
-                ]
+                tasks: []
             },
             {
                 name: "В процессе",
@@ -157,10 +149,11 @@ let app = new Vue({
             } else {
                 alert("Вы достигли максимального количества задач в этом столбце!");
             }
-            // if (this.columns[1].tasks.length < 5) {
-            //     this.columns[1].tasks.push(task);
-            // }
-
+        },
+        moveTask(task, columnIndex) {
+            this.columns[columnIndex - 1].tasks = this.columns[columnIndex - 1].tasks.filter(t => t !== task);
+            this.columns[columnIndex].tasks.push(task);
+            this.saveData();
         }
     },
 });
