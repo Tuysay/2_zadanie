@@ -88,3 +88,8 @@ button:disabled {
     color: #888;
     margin-top: 5px;
 }
+.disabled {
+    pointer-events: none;
+    background-color: bisque;
+    opacity: 0.4;
+}

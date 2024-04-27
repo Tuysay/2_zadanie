@@ -10,7 +10,7 @@ Vue.component('add-task', {
                 <button @click="delSubtask(index)">-</button>
             </div>
             <button @click="addSubtask" :disabled="task.subtasks.length >= maxSubtasks">+</button>
-            <button @click="addTask" :disabled="disableAddButton">Добавить</button>
+            <button @click="addTask" >Добавить</button>
         </div>
     </div>
     `,
@@ -55,6 +55,9 @@ Vue.component('add-task', {
                     return;
                 }
 
+                this.task.subtasks = this.task.subtasks.filter(subtask => subtask.name.trim() !== '');
+
+
                 if (this.task.subtasks.length < 3 || this.task.subtasks.length > 5) {
                     alert('Задача должна содержать от 3 до 5 подзадач.');
                     return;
@@ -82,12 +85,12 @@ Vue.component('add-task', {
 Vue.component('column', {
     props: ['column'],
     template: `
-    <div class="column">
-        <h2>{{ column.name }}</h2>
-        <div class="task">
-            <task v-for="(task, index) in column.tasks" :key="index" :task="task" @done-subtask="doneSubtask(task, $event)"></task>
-        </div>
+<div class="column" :class="{ 'pointer-events-none': isFirstColumnDisabled }">
+    <h2>{{ column.name }}</h2>
+    <div class="task">
+        <task v-for="(task, index) in column.tasks" :key="index" :task="task" @done-subtask="doneSubtask(task, $event)"></task>
     </div>
+</div>
     `,
     methods: {
         doneSubtask(task, subtask) {
@@ -106,6 +109,7 @@ Vue.component('column', {
                     let columnIndex = this.$parent.columns.findIndex(column => column.name === 'В процессе');
                     this.column.tasks = this.column.tasks.filter(t => t !== task);
                     this.$emit('move-task', task, 1);
+                    this.$emit('disable-first-column', true);
                 }
             }
         }
@@ -114,14 +118,20 @@ Vue.component('column', {
 
 Vue.component('task', {
     props: ['task'],
+    methods: {
+        toggleSubtask(subtask) {
+            subtask.done = !subtask.done;
+            this.$emit('done-subtask', subtask);
+        }
+    },
     template: `
-    <div>
+      <div>
     <h2>{{ task.name }}</h2>
     <p v-if="task.completedAt">Завершено: {{ task.completedAt }}</p>
-    <div v-for="(subtask, index) in task.subtasks" class="subtask" :key="index" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
+    <div v-for="subtask in task.subtasks" class="subtask" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
       <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{ subtask.name }}
     </div>
-</div>
+  </div>
     `,
     methods: {
         toggleSubtask(subtask) {
@@ -136,6 +146,7 @@ let app = new Vue({
         name: "Vue To Do list",
         columns: [
             {
+                disabled: false,
                 name: "Новые задачи",
                 tasks: []
             },
@@ -147,7 +158,8 @@ let app = new Vue({
                 name: "Закончено",
                 tasks: []
             }
-        ]
+        ],
+        isFirstColumnDisabled: false
     },
     mounted() {
         if (localStorage.columns) {
@@ -158,6 +170,7 @@ let app = new Vue({
         columns: {
             handler: function (val) {
                 localStorage.columns = JSON.stringify(val);
+                this.checkSecondColumnLimit();
             },
             deep: true
         }
@@ -166,17 +179,37 @@ let app = new Vue({
         saveData() {
             localStorage.setItem('columns', JSON.stringify(this.columns))
         },
-
         addTask(task) {
-            this.columns[0].tasks.push(task);
-            this.saveData();
+            if (!this.isFirstColumnDisabled) {
+                this.columns[0].tasks.push(task);
+                this.saveData();
+            } else {
+                alert("Вы достигли максимального количества задач в первом столбце!");
+            }
         },
         moveTask(task, columnIndex) {
+            this.columns[0].disabled = false;
+
             task.completedAt = new Date().toLocaleString();
 
             this.columns[columnIndex - 1].tasks = this.columns[columnIndex - 1].tasks.filter(t => t !== task);
             this.columns[columnIndex].tasks.push(task);
             this.saveData();
+            this.checkSecondColumnLimit();
+        },
+        checkSecondColumnLimit() {
+            // Проверяем, не превышен ли лимит во второй колонке
+            if (this.columns[1].tasks.length > 4) {
+                this.columns[0].disabled = true
+                alert("это будет ваша последняя задача, пока не сделаешь все, знай! Ps делай задачи из колонки в процессе")
+                return;
+            }
+            this.moveTask(this.columns[1])
+
+        },
+
+        disableFirstColumn(isDisabled) {
+            this.isFirstColumnDisabled = isDisabled;
         }
-    },
+    }
 });
