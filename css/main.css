@@ -93,3 +93,6 @@ button:disabled {
     background-color: bisque;
     opacity: 0.4;
 }
+nav-bar{
+    color: black;
+}
