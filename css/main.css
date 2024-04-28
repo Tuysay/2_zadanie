@@ -91,8 +91,37 @@ button:disabled {
 .disabled {
     pointer-events: none;
     background-color: bisque;
-    opacity: 0.4;
+    opacity: 0.3;
 }
-nav-bar{
-    color: black;
+
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-container input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.search-container input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+
+.disabled_poisk {
+    pointer-events: none;
+    background-color: cornsilk;
+    opacity: 1;
+    max-width: 350px;
+    border-radius: 4px;
+}
+.search-results {
+    margin-left: 10px;
 }

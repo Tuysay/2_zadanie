@@ -14,10 +14,21 @@ initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 <body>
 <div id="app">
+    <div class="search-container">
+        <input type="text" v-model="searchQuery" placeholder="Поиск...">
+    </div>
     <div class="board">
         <add-task @add-task="addTask"></add-task>
-        <column v-for="(column, index) in columns" :class="{disabled:column.disabled}" :key="index" :is-first-column-disabled="isFirstColumnDisabled" :column="column" @save="saveData"  @move-task="moveTask"></column>
+        <column v-for="(column, index) in columns" :key="index" :class="{disabled:column.disabled}" :is-first-column-disabled="isFirstColumnDisabled" :column="column" @save="saveData"  @move-task="moveTask"></column>
     </div>
+    <div class="search-results">
+        <h2>Результаты поиска:</h2>
+        <div v-if="filteredTasks.length === 0">Нет результатов</div>
+        <div v-else>
+            <task v-for="(task, index) in filteredTasks" :key="index" :task="task" :is-disabled="true" :column-index="task.columnIndex" :task-index="task.taskIndex"></task>
+        </div>
+    </div>
+    <br><br>
 </div>
 
 
