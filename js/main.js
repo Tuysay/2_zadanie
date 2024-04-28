@@ -1,28 +1,36 @@
 Vue.component('add-task', {
     template: `
-    <div class="column">
-        <h2>Добавить задачу</h2>
-        <div>
-            <label>Название задачи <input maxlength="35" minlength="3" v-model="task.name"></label>
-            <h3>Подзадачи</h3>
-            <div v-for="(subtask, index) in task.subtasks" :key="index">
-                <input placeholder="Напиши подзадачу" maxlength="50" minlength="3" v-model="subtask.name">
-                <button @click="delSubtask(index)">-</button>
-            </div>
-            <button @click="addSubtask" :disabled="task.subtasks.length >= maxSubtasks">+</button>
-            <button @click="addTask" >Добавить</button>
+    
+<div class="column">
+    <h2>Добавить задачу</h2>
+    <div>
+        <label>Название задачи <input maxlength="35" minlength="3" v-model="task.name"></label>
+        <h3>Приоритет</h3>
+        <select v-model="task.priority">
+            <option v-for="priority in priorities" :key="priority" :value="priority">{{ priority }}</option>
+        </select>
+        <h3>Подзадачи</h3>
+        <div v-for="(subtask, index) in task.subtasks" :key="index">
+            <input placeholder="Напиши подзадачу" maxlength="50" minlength="3" v-model="subtask.name">
+            <button @click="delSubtask(index)">-</button>
         </div>
+        <button @click="addSubtask" :disabled="task.subtasks.length >= maxSubtasks">+</button>
+        <button @click="addTask" >Добавить</button>
     </div>
+</div>
+
     `,
     data() {
         return {
             task: {
                 name: 'Новая задача',
+                priority: '1',
                 subtasks: []
             },
             minSubtasks: 3,
             maxSubtasks: 5,
-            maxTasks: [3, 5]
+            maxTasks: [3, 5],
+            priorities: ['1', '2', '3', '4', '5']
         }
     },
     computed: {
@@ -57,7 +65,6 @@ Vue.component('add-task', {
 
                 this.task.subtasks = this.task.subtasks.filter(subtask => subtask.name.trim() !== '');
 
-
                 if (this.task.subtasks.length < 3 || this.task.subtasks.length > 5) {
                     alert('Задача должна содержать от 3 до 5 подзадач.');
                     return;
@@ -70,12 +77,14 @@ Vue.component('add-task', {
 
                 let newTask = {
                     name: this.task.name,
-                    subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false }))
+                    subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false })),
+                    priority: this.task.priority // Добавлено поле приоритета в создаваемую задачу
                 };
                 this.$emit('add-task', newTask);
 
                 this.task.name = 'Новая задача';
                 this.task.subtasks = [];
+                this.task.priority = 1; // Сбрасываем приоритет после добавления задачи
             } else {
                 alert("Вы достигли максимального количества задач в этом столбце!");
             }
@@ -83,7 +92,7 @@ Vue.component('add-task', {
     }
 });
 Vue.component('column', {
-    props: ['column'],
+    props: ['column', 'isFirstColumnDisabled'], // Добавлено свойство isFirstColumnDisabled
     template: `
 <div class="column" :class="{ 'pointer-events-none': isFirstColumnDisabled }">
     <h2>{{ column.name }}</h2>
@@ -118,20 +127,14 @@ Vue.component('column', {
 
 Vue.component('task', {
     props: ['task'],
-    methods: {
-        toggleSubtask(subtask) {
-            subtask.done = !subtask.done;
-            this.$emit('done-subtask', subtask);
-        }
-    },
     template: `
-      <div>
-    <h2>{{ task.name }}</h2>
-    <p v-if="task.completedAt">Завершено: {{ task.completedAt }}</p>
-    <div v-for="subtask in task.subtasks" class="subtask" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
-      <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{ subtask.name }}
+    <div>
+        <h2>{{ task.name }}<br> (Приоритет: {{ task.priority }})</h2> <!-- Добавлено отображение приоритета -->
+        <p v-if="task.completedAt">Завершено: {{ task.completedAt }}</p>
+        <div v-for="subtask in task.subtasks" class="subtask" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
+            <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{ subtask.name }}
+        </div>
     </div>
-  </div>
     `,
     methods: {
         toggleSubtask(subtask) {
@@ -161,11 +164,18 @@ let app = new Vue({
         ],
         isFirstColumnDisabled: false
     },
-    mounted() {
-        if (localStorage.columns) {
-            this.columns = JSON.parse(localStorage.columns);
-        }
-    },
+        mounted() {
+            if (localStorage.columns) {
+                this.columns = JSON.parse(localStorage.columns);
+
+                // Проверяем, есть ли свойство tasks в каждой колонке
+                this.columns.forEach(column => {
+                    if (!column.hasOwnProperty('tasks')) {
+                        column.tasks = [];
+                    }
+                });
+            }
+        },
     watch: {
         columns: {
             handler: function (val) {
@@ -181,7 +191,10 @@ let app = new Vue({
         },
         addTask(task) {
             if (!this.isFirstColumnDisabled) {
+                // Добавляем новую задачу в колонку
                 this.columns[0].tasks.push(task);
+                // Сортируем задачи по приоритету (по убыванию)
+                this.columns[0].tasks.sort((a, b) => b.priority - a.priority);
                 this.saveData();
             } else {
                 alert("Вы достигли максимального количества задач в первом столбце!");
@@ -194,12 +207,13 @@ let app = new Vue({
 
             this.columns[columnIndex - 1].tasks = this.columns[columnIndex - 1].tasks.filter(t => t !== task);
             this.columns[columnIndex].tasks.push(task);
+            this.columns[columnIndex].tasks.sort((a, b) => b.priority - a.priority); // Сортировка задач по приоритету
             this.saveData();
             this.checkSecondColumnLimit();
         },
         checkSecondColumnLimit() {
             // Проверяем, не превышен ли лимит во второй колонке
-            if (this.columns[1].tasks.length > 4) {
+            if (this.columns[1] && this.columns[1].tasks && this.columns[1].tasks.length > 4) {
                 this.columns[0].disabled = true
                 alert("это будет ваша последняя задача, пока не сделаешь все, знай! Ps делай задачи из колонки в процессе")
                 return;

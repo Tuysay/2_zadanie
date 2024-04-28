@@ -16,7 +16,7 @@ initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 <div id="app">
     <div class="board">
         <add-task @add-task="addTask"></add-task>
-        <column v-for="(column, index) in columns" :class="{disabled:column.disabled}" :key="index" :column="column" @save="saveData"  @move-task="moveTask"></column>
+        <column v-for="(column, index) in columns" :class="{disabled:column.disabled}" :key="index" :is-first-column-disabled="isFirstColumnDisabled" :column="column" @save="saveData"  @move-task="moveTask"></column>
     </div>
 </div>
 
