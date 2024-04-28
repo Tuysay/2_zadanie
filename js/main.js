@@ -1,4 +1,4 @@
-Vue.component('add-task', {
+Vue.component('add_task', {
     template: `
     <div class="column">
         <h2>Добавить задачу</h2>
@@ -83,12 +83,12 @@ Vue.component('add-task', {
 Vue.component('column', {
     props: ['column', 'isFirstColumnDisabled'],
     template: `
-<div class="column" :class="{ 'pointer-events-none': isFirstColumnDisabled }">
-    <h2>{{ column.name }}</h2>
-    <div class="task">
-        <task v-for="(task, index) in sortedTasks" :key="index" :task="task" @done-subtask="doneSubtask(task, $event)" @change-priority="changePriority(task, $event)"></task>
+    <div class="column" :class="{ 'pointer-events-none': isFirstColumnDisabled }">
+        <h2>{{ column.name }}</h2>
+        <div class="task">
+            <task v-for="(task, index) in sortedTasks" :key="index" :task="task" @done-subtask="doneSubtask(task, $event)" @change-priority="changePriority(task, $event)"></task>
+        </div>
     </div>
-</div>
     `,
     computed: {
         sortedTasks() {
@@ -152,6 +152,28 @@ Vue.component('task', {
             this.$emit('change-priority', change);
         }
     }
+});
+
+// Vue.component('search-container', {
+//     template: `
+//         <div class="search-container">
+//             <input type="text" v-model="searchQuery" placeholder="Поиск...">
+//         </div>
+//     `,
+//     props: ['searchQuery']
+// });
+
+Vue.component('search_results', {
+    template: `
+        <div class="search-results">
+            <h2>Результаты поиска:</h2>
+            <div v-if="filteredTasks.length === 0">Нет результатов</div>
+            <div v-else>
+                <task v-for="(task, index) in filteredTasks" :key="index" :task="task" :is-disabled="true"></task>
+            </div>
+        </div>
+    `,
+    props: ['filteredTasks']
 });
 
 
