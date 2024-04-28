@@ -78,13 +78,13 @@ Vue.component('add-task', {
                 let newTask = {
                     name: this.task.name,
                     subtasks: this.task.subtasks.map(subtask => ({ name: subtask.name, done: false })),
-                    priority: this.task.priority // Добавлено поле приоритета в создаваемую задачу
+                    priority: this.task.priority
                 };
                 this.$emit('add-task', newTask);
 
                 this.task.name = 'Новая задача';
                 this.task.subtasks = [];
-                this.task.priority = 1; // Сбрасываем приоритет после добавления задачи
+                this.task.priority = 1;
             } else {
                 alert("Вы достигли максимального количества задач в этом столбце!");
             }
@@ -92,7 +92,7 @@ Vue.component('add-task', {
     }
 });
 Vue.component('column', {
-    props: ['column', 'isFirstColumnDisabled'], // Добавлено свойство isFirstColumnDisabled
+    props: ['column', 'isFirstColumnDisabled'],
     template: `
 <div class="column" :class="{ 'pointer-events-none': isFirstColumnDisabled }">
     <h2>{{ column.name }}</h2>
@@ -129,7 +129,7 @@ Vue.component('task', {
     props: ['task'],
     template: `
     <div>
-        <h2>{{ task.name }}<br> (Приоритет: {{ task.priority }})</h2> <!-- Добавлено отображение приоритета -->
+        <h2>{{ task.name }}<br> (Приоритет: {{ task.priority }})</h2>
         <p v-if="task.completedAt">Завершено: {{ task.completedAt }}</p>
         <div v-for="subtask in task.subtasks" class="subtask" :class="{ done: subtask.done }" @click="toggleSubtask(subtask)">
             <input maxlength="45" minlength="3" type="checkbox" v-model="subtask.done"> {{ subtask.name }}
@@ -168,7 +168,7 @@ let app = new Vue({
             if (localStorage.columns) {
                 this.columns = JSON.parse(localStorage.columns);
 
-                // Проверяем, есть ли свойство tasks в каждой колонке
+
                 this.columns.forEach(column => {
                     if (!column.hasOwnProperty('tasks')) {
                         column.tasks = [];
@@ -191,9 +191,7 @@ let app = new Vue({
         },
         addTask(task) {
             if (!this.isFirstColumnDisabled) {
-                // Добавляем новую задачу в колонку
                 this.columns[0].tasks.push(task);
-                // Сортируем задачи по приоритету (по убыванию)
                 this.columns[0].tasks.sort((a, b) => b.priority - a.priority);
                 this.saveData();
             } else {
@@ -212,7 +210,7 @@ let app = new Vue({
             this.checkSecondColumnLimit();
         },
         checkSecondColumnLimit() {
-            // Проверяем, не превышен ли лимит во второй колонке
+
             if (this.columns[1] && this.columns[1].tasks && this.columns[1].tasks.length > 4) {
                 this.columns[0].disabled = true
                 alert("это будет ваша последняя задача, пока не сделаешь все, знай! Ps делай задачи из колонки в процессе")
